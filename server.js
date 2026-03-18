@@ -5,24 +5,27 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 app.get("/", (req, res) => {
-  res.send("🚀 Sponge AI Server Çalışıyor!");
+  res.send("🚀 Sponge AI Server Working!");
 });
 
-// CHAT (GERÇEK AI)
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
 
     if (!userMessage) {
-      return res.status(400).json({ error: "Message gerekli" });
+      return res.status(400).json({ error: "Message required" });
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
 
-    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+    if (!apiKey) {
+      return res.status(500).json({ error: "OPENAI_API_KEY missing" });
+    }
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -33,7 +36,7 @@ app.post("/chat", async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "You are a crazy, emotional SpongeBob-like character. You can get angry, confused, or happy. Never repeat the user's message. Always respond differently."
+            content: "You are Sponge AI. Never repeat the user's message. Always give a creative response."
           },
           {
             role: "user",
@@ -43,15 +46,17 @@ app.post("/chat", async (req, res) => {
       })
     });
 
-    const data = await aiResponse.json();
+    const data = await response.json();
 
-    const reply = data.choices?.[0]?.message?.content || "I don't know what to say.";
+    const reply =
+      data.choices?.[0]?.message?.content ||
+      "AI did not respond.";
 
     res.json({ reply });
 
   } catch (err) {
     console.error(err);
-    res.json({ reply: "Something went wrong..." });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
