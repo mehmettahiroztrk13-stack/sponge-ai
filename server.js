@@ -1,3 +1,17 @@
+const express = require("express");
+const cors = require("cors");
+
+const app = express(); // 🔥 BU ÇOK ÖNEMLİ
+
+app.use(cors());
+app.use(express.json());
+
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("Server çalışıyor 🚀");
+});
+
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
@@ -21,32 +35,28 @@ app.post("/chat", async (req, res) => {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          {
-            role: "system",
-            content: "You are Sponge AI. Never repeat user."
-          },
-          {
-            role: "user",
-            content: userMessage
-          }
+          { role: "system", content: "You are Sponge AI. Never repeat user." },
+          { role: "user", content: userMessage }
         ]
       })
     });
 
     const data = await response.json();
 
-    console.log("OPENAI RESPONSE:", data); // 🔥 EN ÖNEMLİ SATIR
+    console.log("OPENAI RESPONSE:", data);
 
     if (!data.choices) {
       return res.status(500).json({ error: data });
     }
 
-    const reply = data.choices[0].message.content;
-
-    res.json({ reply });
+    res.json({ reply: data.choices[0].message.content });
 
   } catch (err) {
-    console.log("SERVER ERROR:", err); // 🔥 HATAYI GÖRECEĞİZ
+    console.log("SERVER ERROR:", err);
     res.status(500).json({ error: "SERVER CRASH" });
   }
+});
+
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
 });
